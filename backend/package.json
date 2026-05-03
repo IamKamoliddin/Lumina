@@ -1,0 +1,27 @@
+{
+  "name": "lumina-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "migrate": "node src/migrate.js",
+    "lint": "node -e \"console.log('Add backend lint config when rules are finalized')\"",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@google/genai": "^1.51.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "ms": "^2.1.3",
+    "mysql2": "^3.22.3",
+    "zod": "^4.1.12"
+  }
+}

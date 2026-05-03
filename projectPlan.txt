@@ -1,0 +1,347 @@
+Lumina — Student Productivity Ecosystem
+Master Product Specification Prompt
+
+
+Role: You are a Senior Full-Stack Engineer, UI/UX Designer, and AI Systems Architect with expertise in building production-grade, design-forward web applications.
+Objective: Design and build Lumina — a web-based Student Productivity Ecosystem that combines a Smart Academic Calendar, an AI Study Assistant, a Digital Library, and a Focus Timer into a single, cohesive, beautifully designed platform. The product should feel like Notion meets Linear meets ChatGPT, built specifically for university students.
+
+
+Part 1 — Product Vision & Core Philosophy
+Lumina solves one core problem: students are overwhelmed because their tools are fragmented. Their schedule is in one app, their books in another, their AI assistant in a third. Lumina unifies everything into a single dashboard that is:
+
+Clean but information-rich — every piece of data has a place; nothing is hidden more than one click away
+Context-aware — the AI knows your exam dates, your reading progress, and your free time slots
+Visually honest — colors, shapes, and animations carry meaning, not decoration
+
+
+Part 2 — Design System & Visual Language
+2.1 Design Tokens (Non-negotiable)
+These values must be applied consistently across every component:
+Background (primary):   #0B0E14  — deep charcoal, NOT pure black
+Background (surface):   #111520  — card surfaces
+Background (elevated):  #161B28  — hover states, modals
+Border (default):       rgba(255, 255, 255, 0.07)
+Border (hover):         rgba(255, 255, 255, 0.12)
+
+Typography (UI):        Inter — weights 400, 500, 600, 700
+Typography (data/code): Geist Mono — weights 400, 500
+
+Border radius:          14px (cards), 10px (inputs/buttons), 20px (modals)
+Shadow (card):          0 4px 20px rgba(0, 0, 0, 0.45)
+Shadow (elevated):      0 8px 40px rgba(0, 0, 0, 0.55)
+Transition:             all 0.2s ease
+Micro-animation scale:  1.02 on button hover, 1.04 on card hover (translateY -4px)
+2.2 Subject Color System
+Every subject has one assigned color. This color must appear identically in four places: the calendar event block, the book spine/cover tint, the progress ring/bar, and the task tag badge.
+SubjectColor NameHex ValueUsageMathematicsSky Blue#38BDF8Calendar blocks, progress rings, tagsProgrammingEmerald#34D399Calendar blocks, progress rings, tagsHistoryAmber#FBBF24Calendar blocks, progress rings, tagsPhysicsPink Rose#F472B6Calendar blocks, progress rings, tagsGeneral/AIIndigo#6366F1AI suggestions, accent actions
+Rule: Never use a color for pure decoration. Every color must communicate subject identity.
+2.3 Dark Mode — Deep Charcoal, Not Pure Black
+The background must be #0B0E14. Pure black (#000000) causes eye strain under prolonged use. The slight warmth of deep charcoal reduces fatigue during late-night study sessions, which is a primary use case for this product.
+Apply a subtle noise grain overlay (2–3% opacity SVG filter) over the entire page to add texture and prevent the flat look of pure dark backgrounds.
+2.4 Glassmorphism for the AI Panel
+The AI Assistant sidebar must use glassmorphism:
+cssbackground: rgba(17, 21, 32, 0.75);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border-left: 1px solid rgba(255, 255, 255, 0.10);
+Add two radial gradient glow spots (one indigo, one sky blue) positioned in the top-right and bottom-left corners of the panel at very low opacity (0.15–0.25). This creates the illusion of a floating, luminous panel separate from the main content.
+
+Part 3 — Layout Architecture
+3.1 Global Shell
+The application uses a three-column shell that is fixed-height (100vh), no vertical scrolling at the shell level:
+┌──────┬─────────────────────────────────┬───────────────────┐
+│      │           TOP BAR               │                   │
+│  NAV ├─────────────────────────────────┤    AI SIDEBAR     │
+│ 64px │                                 │     320px         │
+│      │      CENTER CONTENT AREA        │   (glassmorphism) │
+│icons │      (scrollable internally)    │   (persistent)    │
+│only  │                                 │                   │
+└──────┴─────────────────────────────────┴───────────────────┘
+
+Left Nav: 64px wide, icon-only, slim. No labels. Icons show tooltips on hover. This maximizes horizontal space for content.
+Center: Flexible, takes all remaining width. Each page section scrolls internally.
+Right AI Sidebar: Always visible. 320px. Cannot be hidden (it is the core feature). Contains: chat history, context panel, quick-action chips, and message input.
+
+3.2 Left Navigation Icons (in order)
+
+Dashboard (grid icon)
+Calendar (calendar icon)
+Library (document/book icon)
+Tasks (checkbox icon)
+Focus Timer (clock icon)
+Divider
+Settings (gear icon)
+Spacer (pushes items below to the bottom)
+Focus Mode toggle (target/circle icon) — at the bottom
+User avatar (32px circle, initials)
+
+3.3 Top Bar
+Height: 56px. Contains (left to right):
+
+Page title (dynamic, changes per section) — Inter 16px, weight 600
+Search bar (expands on focus from 220px to 260px, soft glow border on focus)
+Status pill: "⚠ 2 exams soon" in danger red
+Status pill: "AI ready" in indigo
+Notifications icon button
+
+
+Part 4 — Page Specifications
+4.1 Dashboard Page
+Purpose: Give the student a complete picture of their academic day in under 5 seconds.
+Layout — top to bottom:
+AI Banner (full width): A gradient panel (indigo → deep blue) that shows the AI's most urgent proactive insight. Example: "You've made great progress on 'Clean Code' (46%). Should I schedule your next reading block for tomorrow at 10:00 AM?" — with Accept and Dismiss buttons. This banner is triggered by the backend whenever a book's current_page is updated via PATCH /api/books/:id.
+Stats Row (4 equal columns):
+Each is a card containing: a monospace label, a large number (36px, weight 700), a subtitle, a 7-bar sparkline (bars colored to the dominant subject), and a trend badge (green "↑" or red "⚠").
+CardValueTrendFocus hours this week14.5h↑ +12%Study sessions23↑ On streakUpcoming exams3⚠ 2 need prepBooks reading4→ On pace
+Main Grid (2 columns):
+
+Left: "Today's Schedule" — a vertical list of schedule-item rows. Each row has a left colored border (subject color), a monospace time label, an event name, and a subject tag badge. AI-suggested slots appear with a dashed border and ghost opacity.
+Right (stacked): Subject Progress card (4 thin progress bars, each a different subject color) + Exam Countdown card (3 items with colored priority dots).
+
+4.2 Calendar Page
+Purpose: The heart of Lumina. Students must be able to see their week, detect conflicts, and add events from this single view.
+Structure:
+
+Header bar: back/forward navigation, current week label, event type legend, "+ Add event" button
+A 7-column weekly grid (Mon–Sun) with 14 time rows (08:00–21:00). Each cell is 56px tall.
+The current day column header displays in indigo with a dot indicator.
+Internal scroll within the grid container (max-height 480px).
+
+Event Block Types — must be visually distinct:
+TypeBackgroundLeft BorderText ColorSpecialClasssubject color at 10% opacity3px solid subject colorsubject color—Examred at 12% opacity3px solid #F87171#F87171—AI Suggestiongreen at 6% opacity3px solid #34D399#34D3991.5px dashed outer borderStudy Sessionamber at 10% opacity3px solid #FBBF24#FBBF24—
+Ghost Blocks (AI Suggestions): Must use border: 1.5px dashed [subject color] on the outer container. This communicates to the student: "This is not confirmed — it is a suggestion you can accept." When the user clicks "Add to Calendar" on an AI suggestion, the block transitions from dashed to solid.
+Conflict Detection Banner: When two events overlap, show a red banner above the calendar grid:
+
+"⚠ Conflict detected: [Event A] overlaps with [Event B] on [Day] at [Time]."
+This is triggered by the backend's conflict detection service before saving.
+
+Drag-and-drop target: Every empty calendar cell accepts a drop from the Library (a dragged book card). On drop, a new AI_Study_Session event is created at that time slot for that book.
+4.3 Library Page
+Purpose: A premium bookshelf experience. Not a list — a visual grid of book cards that communicate reading progress at a glance.
+Layout:
+
+Filter pills row: All | Reading | Want to Read | Completed
+auto-fill grid with minmax(175px, 1fr) columns
+"+ Add book" button in section header
+
+Book Card anatomy (each card):
+
+Book cover area (44×58px tinted box): Contains the book emoji/icon, tinted with the subject color at 15% opacity. In the bottom-right corner, a 28px circular SVG progress ring showing the read percentage. The ring stroke color matches the subject color.
+Book title — 13px, weight 600, letter-spacing -0.02em
+Author — 11px, monospace, muted
+Thin progress bar — 3px height, subject color fill, full card width
+Bottom row — "current/total pages" in monospace on the left, status badge on the right
+
+Hover overlay (critical UX requirement): When the user hovers over any book card:
+
+The card scales up (scale(1.02) translateY(-4px)) with box-shadow elevation
+A dark semi-transparent overlay fades in over the card (rgba(11,14,20,0.88), opacity transition)
+The overlay displays: a 2–3 sentence AI summary of the book's content (stored in the database or generated by the AI service), and a prominent "Update progress" button
+This avoids showing a clutter of buttons in the default state
+
+Draggable: Each book card must be draggable="true". On drag start, set dataTransfer with the book ID. The Calendar page's day cells are the drop targets.
+4.4 Tasks Page
+Purpose: A simple, actionable task manager connected to the calendar's exam data.
+Layout: Two-column. Left: task lists. Right: exam countdown cards + today's completion percentage.
+Task groups: "Today" (with urgent red due dates), "Upcoming" (with date labels), "Exams" (with colored priority dots).
+Each task row: Animated checkbox (tap to toggle done — adds strikethrough and reduces opacity to 45%), task name, subject tag badge, due date label.
+4.5 Focus Timer Page
+Purpose: A Pomodoro timer deeply integrated with the rest of Lumina.
+Layout: Two-column. Left: the timer (centered in a card). Right: stats + subject selector + weekly bar chart.
+Timer anatomy:
+
+Mode selector: Focus (25 min) | Short break (5 min) | Long break (15 min)
+Large SVG ring (200×200px): animated stroke-dashoffset ring. Color changes by mode (indigo for focus, emerald for short break, sky blue for long break)
+Inside the ring: large time display (46px, weight 700), mode label (monospace), current subject name
+Session pip dots (4 dots, filled as sessions complete)
+Start / Pause / Resume / Reset buttons
+
+Focus Mode overlay: When the nav's "Focus" button is clicked, a full-screen overlay appears (backdrop-filter: blur(8px) on rgba(11,14,20,0.92)), showing only the timer ring, time, subject, and an "Exit focus mode" link. The Pomodoro continues running underneath.
+
+Part 5 — AI Assistant Sidebar Specification
+This sidebar is persistent across all pages. It never disappears.
+5.1 Structure (top to bottom)
+
+Header: 32px gradient orb (indigo → sky blue, pulsing glow animation), "StudyGPT" title, green status dot with "Context loaded"
+Chat history area: Scrollable, flex-column, gap 12px. AI messages align left (glass bubble), user messages align right (indigo solid bubble)
+Quick-action chips row: Horizontal scroll. Each chip is a common query. Examples: "Study plan for today", "Explain integration by parts", "Focus tips", "Summarize chapter"
+Message input: Grows vertically up to 100px. Rounded border, indigo glow ring on focus. Send button (indigo, with glow shadow)
+
+5.2 Context Window (how the AI thinks)
+Before every API call, the frontend builds a context string and sends it to POST /api/ai/chat. The context must include:
+- All of the user's active books (title, current_page, total_pages, subject)
+- All upcoming calendar events for the next 7 days (title, type, start_time)
+- The user's focus_logs summary for the past 7 days (subject, total_minutes)
+- The current date and time
+This context is prepended to the user's message before sending to the Anthropic API. The AI therefore always knows the user's schedule, reading status, and study history — it never gives generic advice.
+5.3 AI Behavior Rules
+
+Always prioritize exam preparation above all other suggestions
+Never suggest a time slot that conflicts with an existing calendar event
+When a student says they are tired or unfocused, offer a break strategy first, then a lighter study task
+Keep responses concise: maximum 4 sentences or a short structured plan with bullet points
+After generating a study plan with time slots, always offer to add it to the calendar
+
+5.4 Proactive AI Triggers (Backend-initiated)
+The backend must trigger AI suggestions in these situations:
+TriggerConditionAI message shownReading progress updateUser updates current_page via PATCH"You've made great progress on [book]. Schedule next session?"Exam approachingstart_time of an Exam event is within 72 hours"Your [subject] exam is in 3 days. Here's a prep plan."Free time detectedA 90+ min gap exists in today's calendar"You have free time at [time]. Add a study session?"Low study hoursWeekly focus hours < 50% of goal"You're behind on your weekly goal. Let's catch up."
+
+Part 6 — Backend Architecture
+6.1 Technology Stack
+Runtime:      Node.js 20 LTS
+Framework:    Express.js 4.x
+Database:     MySQL 8.x via mysql2 (connection pool, 10 connections)
+Auth:         JWT (access token 15 min + refresh token 7 days, httpOnly cookies)
+Validation:   Zod (all request bodies validated before reaching controllers)
+AI:           Anthropic Claude API (claude-sonnet-4-6)
+Cache:        Redis (AI suggestion responses cached 10 min per user)
+Rate limit:   100 requests/minute per authenticated user
+6.2 Project Structure
+server/
+├── src/
+│   ├── routes/
+│   │   ├── auth.js          POST /api/auth/login, /register, /refresh
+│   │   ├── books.js         GET, POST, PATCH, DELETE /api/books
+│   │   ├── events.js        GET, POST, DELETE /api/events
+│   │   ├── subjects.js      GET, POST /api/subjects
+│   │   ├── focusLogs.js     GET, POST /api/focus-logs
+│   │   └── ai.js            POST /api/ai/chat, /api/ai/suggest
+│   ├── services/
+│   │   ├── conflictService.js   — overlap detection query
+│   │   ├── aiService.js         — context builder + Anthropic API call
+│   │   ├── scheduleService.js   — free slot detection algorithm
+│   │   └── notifyService.js     — proactive AI trigger evaluation
+│   ├── middleware/
+│   │   ├── auth.js              — JWT verification
+│   │   ├── validate.js          — Zod schema middleware
+│   │   └── rateLimit.js         — per-user rate limiting
+│   ├── db/
+│   │   ├── pool.js              — mysql2 pool config
+│   │   └── migrations/          — versioned SQL files
+│   └── app.js
+└── package.json
+
+Framework:      React 18 + Vite 5
+Styling:        Tailwind CSS v3 with custom design tokens in tailwind.config.js
+Components:     shadcn/ui (Dialog, Popover, Tooltip, Command palette)
+Drag-and-drop:  react-beautiful-dnd
+Calendar grid:  @fullcalendar/react with timeGrid and dayGrid plugins
+Charts:         recharts (sparklines, bar charts)
+Animations:     framer-motion (page transitions, card reveals, overlay animations)
+State:          Zustand (global stores for books, events, user, AI context)
+HTTP client:    Axios with a base instance and JWT interceptor
+Forms:          react-hook-form + Zod resolvers (matches backend validation)
+8.2 Folder Structure
+src/
+├── components/
+│   ├── layout/
+│   │   ├── AppShell.jsx       — three-column grid shell
+│   │   ├── LeftNav.jsx        — icon nav with tooltips and active state
+│   │   ├── TopBar.jsx         — search, status pills, notifications
+│   │   └── AISidebar.jsx      — persistent glass AI panel
+│   ├── dashboard/
+│   │   ├── AIBanner.jsx       — proactive AI suggestion strip
+│   │   ├── StatCard.jsx       — metric card with sparkline + trend badge
+│   │   ├── ScheduleList.jsx   — today's schedule with ghost blocks
+│   │   └── ProgressCard.jsx   — subject progress bars
+│   ├── calendar/
+│   │   ├── WeekGrid.jsx       — 7×14 time grid
+│   │   ├── EventBlock.jsx     — renders class/exam/AI/study blocks
+│   │   ├── GhostBlock.jsx     — dashed AI suggestion block
+│   │   └── ConflictBanner.jsx — red conflict warning
+│   ├── library/
+│   │   ├── BookCard.jsx       — card with cover, ring, hover overlay
+│   │   ├── ProgressRing.jsx   — SVG circular progress component
+│   │   └── PageModal.jsx      — update current_page modal
+│   ├── tasks/
+│   │   ├── TaskItem.jsx       — animated checkbox row
+│   │   └── ExamCountdown.jsx  — colored exam deadline cards
+│   └── timer/
+│       ├── PomoRing.jsx       — SVG ring timer
+│       ├── ModeSelector.jsx   — Focus/Short/Long tabs
+│       └── FocusOverlay.jsx   — full-screen focus mode
+├── pages/
+│   ├── Dashboard.jsx
+│   ├── Calendar.jsx
+│   ├── Library.jsx
+│   ├── Tasks.jsx
+│   ├── Timer.jsx
+│   └── Settings.jsx
+├── store/
+│   ├── booksStore.js          — books state + CRUD actions
+│   ├── eventsStore.js         — events state + conflict detection
+│   ├── userStore.js           — auth state + preferences
+│   └── aiStore.js             — chat history + context builder
+├── hooks/
+│   ├── useConflictDetect.js   — runs before saving any event
+│   ├── useAISuggest.js        — triggers AI suggestion API call
+│   ├── usePomo.js             — Pomodoro timer logic
+│   └── useFreeSlots.js        — finds gaps in today's calendar
+├── api/
+│   ├── client.js              — Axios instance with JWT interceptor
+│   ├── books.js               — API calls for books endpoints
+│   ├── events.js              — API calls for events endpoints
+│   └── ai.js                  — API calls for AI endpoints
+└── lib/
+    ├── designTokens.js        — JS export of all CSS variables
+    ├── subjectColors.js       — subject → color mapping utility
+    └── timeUtils.js           — date/time formatting helpers
+8.3 State Management Pattern (Zustand)
+js// eventsStore.js
+const useEventsStore = create((set, get) => ({
+  events: [],
+  conflictWarning: null,
+
+  addEvent: async (newEvent) => {
+    // 1. Call POST /api/events
+    // 2. If 409 → set conflictWarning with the conflicting event details
+    // 3. If 201 → append to events array, clear conflictWarning
+  },
+
+  acceptAISuggestion: async (ghostEvent) => {
+    // Convert is_confirmed: false → true
+    // Call PATCH /api/events/:id with { is_confirmed: true }
+    // Update local state (dashed border → solid border transition)
+  }
+}));
+
+Part 9 — Infrastructure & Deployment Recommendations
+LayerRecommended ToolWhyFrontend hostingVercelZero-config React/Vite deploys, global CDN, free tierBackend hostingRailwayNode.js + MySQL in one platform, auto-deploys from GitHubDatabasePlanetScale or Railway MySQLManaged MySQL, branching for schema migrationsCacheUpstash RedisServerless Redis, free tier, perfect for AI response cachingAuthJWT + httpOnly cookiesStateless, secure, no library lock-inFile storageCloudinaryBook cover images, free tier availableEnvironment.env file, never committedDB_HOST, ANTHROPIC_API_KEY, JWT_SECRET, REDIS_URLAPI securityHelmet.js + CORS whitelistSecurity headers, only allow the frontend originMonitoringBetter Stack (Logtail)Real-time logs, free tier, simple setup
+9.1 Environment Variables Required
+bash# Backend
+DB_HOST=
+DB_PORT=3306
+DB_USER=
+DB_PASSWORD=
+DB_NAME=lumina_db
+JWT_SECRET=
+JWT_REFRESH_SECRET=
+ANTHROPIC_API_KEY=
+REDIS_URL=
+CLIENT_ORIGIN=https://lumina.app
+
+# Frontend
+VITE_API_BASE_URL=https://api.lumina.app
+
+Part 10 — Interaction & Animation Specification
+Every interaction must feel deliberate and high-quality. The following animations are required:
+InteractionAnimationPage navigationopacity 0→1, translateY 10px→0, duration 280ms, easeCard hoverscale(1.02) translateY(-4px), border-color brightens, box-shadow deepensButton hoverscale(1.02), background brightens slightlyButton pressscale(0.98), immediateBook card hoverCard scales up; overlay fades in at opacity 0→1 over 250msAI bubble appearopacity 0→1, translateY 6px→0, duration 220msTyping indicatorThree dots bounce sequentially, 0.15s delay between eachPomodoro ringstroke-dashoffset transition 800ms ease — smooth countdownFocus mode openBackground dims with blur 0→8px transition over 300msTask checkboxCheck mark draws in with border animation over 180msProgress bar fillWidth transitions from 0% to actual value over 500ms ease on mountGhost block acceptborder-style: dashed → solid with color opacity 50%→100% over 300ms
+
+Part 11 — Final Checklist
+Before the build is considered complete, verify:
+
+ Background is #0B0E14, not #000000
+ All four subjects have unique, consistent colors across calendar, library, and tasks
+ AI sidebar uses glassmorphism with backdrop-filter: blur(20px)
+ AI-suggested calendar blocks use dashed borders, not solid
+ Book cards show circular progress ring + AI summary on hover
+ Books are draggable onto calendar cells
+ Conflict detection shows a banner when events overlap (409 from backend)
+ Focus mode toggle dims everything except the Pomodoro timer
+ All hover interactions use scale(1.02) micro-animation
+ POST /api/events checks for conflicts before saving
+ PATCH /api/books/:id triggers AI banner when current_page is updated
+ POST /api/ai/suggest builds full context (books + events + focus logs) before calling Anthropic
+ JWT is stored in httpOnly cookies, never localStorage
+ All API request bodies are validated with Zod schemas
+ Database has indexes on (user_id, start_time) and (user_id, status)

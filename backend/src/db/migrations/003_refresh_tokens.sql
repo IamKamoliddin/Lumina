@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS `refresh_tokens` (
+  `user_id` CHAR(36) PRIMARY KEY,
+  `token_hash` VARCHAR(255) NOT NULL,
+  `issued_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
