@@ -13,7 +13,7 @@
     "ios:mobile": "npm --workspace frontend-mobile run ios",
     "android:mobile": "npm --workspace frontend-mobile run android",
     "dev:backend": "npm --workspace backend run dev",
-    "build:frontend": "npm --workspace frontend run build",
+    "build:frontend": "npm --workspace frontend run build && rm -rf dist && cp -R frontend/dist dist",
     "test:backend": "npm --workspace backend run test",
     "lint:frontend": "npm --workspace frontend run lint"
   }
