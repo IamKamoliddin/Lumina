@@ -49,7 +49,21 @@ export const apiRequest = async (path, options = {}) => {
       return null
     }
 
-    const payload = await response.json().catch(() => ({}))
+    const responseText = await response.text()
+    let payload = {}
+
+    if (responseText) {
+      try {
+        payload = JSON.parse(responseText)
+      } catch {
+        const error = new Error(
+          `API at ${requestUrl} returned a non-JSON response. Check Vercel API routing and backend deployment.`,
+        )
+        error.status = response.status
+        error.code = 'INVALID_API_RESPONSE'
+        throw error
+      }
+    }
 
     if (!response.ok) {
       const backendCode = payload?.error?.code ?? payload?.code

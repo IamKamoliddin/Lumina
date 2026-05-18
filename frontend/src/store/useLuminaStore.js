@@ -154,6 +154,16 @@ const buildUserModel = (user) => ({
   profile_picture_url: user.profile_picture_url ?? '',
 })
 
+const requireAuthUser = (payload) => {
+  if (!payload?.user?.name) {
+    const error = new Error('Authentication API returned an invalid user response. Check Vercel API routing and environment variables.')
+    error.code = 'INVALID_AUTH_RESPONSE'
+    throw error
+  }
+
+  return payload.user
+}
+
 const today = new Date('2026-04-26T19:00:00')
 
 const addDays = (date, days) => {
@@ -669,9 +679,10 @@ export const useLuminaStore = create((set, get) => ({
 
     try {
       const payload = await meRequest()
+      const user = requireAuthUser(payload)
 
       set({
-        user: buildUserModel(payload.user),
+        user: buildUserModel(user),
         authStatus: 'authenticated',
         authError: null,
       })
@@ -696,9 +707,10 @@ export const useLuminaStore = create((set, get) => ({
 
     try {
       const payload = await registerRequest({ name, email, password })
+      const user = requireAuthUser(payload)
 
       set({
-        user: buildUserModel(payload.user),
+        user: buildUserModel(user),
         authStatus: 'authenticated',
         isAuthBusy: false,
         authError: null,
@@ -721,9 +733,10 @@ export const useLuminaStore = create((set, get) => ({
 
     try {
       const payload = await loginRequest({ email, password })
+      const user = requireAuthUser(payload)
 
       set({
-        user: buildUserModel(payload.user),
+        user: buildUserModel(user),
         authStatus: 'authenticated',
         isAuthBusy: false,
         authError: null,
