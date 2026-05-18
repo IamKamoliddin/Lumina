@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "dev": "node --watch src/server.js",
+    "dev": "node scripts/dev-server.js",
     "start": "node src/server.js",
     "migrate": "node src/migrate.js",
     "lint": "node -e \"console.log('Add backend lint config when rules are finalized')\"",
