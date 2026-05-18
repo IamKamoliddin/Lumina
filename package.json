@@ -4,10 +4,14 @@
   "version": "0.1.0",
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "frontend-mobile"
   ],
   "scripts": {
     "dev:frontend": "npm --workspace frontend run dev",
+    "dev:mobile": "npm --workspace frontend-mobile run start",
+    "ios:mobile": "npm --workspace frontend-mobile run ios",
+    "android:mobile": "npm --workspace frontend-mobile run android",
     "dev:backend": "npm --workspace backend run dev",
     "build:frontend": "npm --workspace frontend run build",
     "test:backend": "npm --workspace backend run test",

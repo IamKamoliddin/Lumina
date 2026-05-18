@@ -37,22 +37,37 @@ const setAuthCookies = (res, session) => {
   )
 }
 
+const isMobileClient = (req) => req.get('x-client-platform') === 'mobile'
+
+const buildAuthResponse = (req, session) => {
+  const response = { user: session.user }
+
+  if (isMobileClient(req)) {
+    response.accessToken = session.accessToken
+    response.refreshToken = session.refreshToken
+  }
+
+  return response
+}
+
 export const register = async (req, res) => {
   const session = await registerUser(req.validated.body)
   setAuthCookies(res, session)
-  res.status(201).json({ user: session.user })
+  res.status(201).json(buildAuthResponse(req, session))
 }
 
 export const login = async (req, res) => {
   const session = await loginUser(req.validated.body)
   setAuthCookies(res, session)
-  res.json({ user: session.user })
+  res.json(buildAuthResponse(req, session))
 }
 
 export const refresh = async (req, res) => {
-  const session = await refreshUserSession(req.cookies?.[authCookies.refresh])
+  const session = await refreshUserSession(
+    req.cookies?.[authCookies.refresh] ?? req.get('x-refresh-token'),
+  )
   setAuthCookies(res, session)
-  res.json({ user: session.user })
+  res.json(buildAuthResponse(req, session))
 }
 
 export const me = async (req, res) => {
