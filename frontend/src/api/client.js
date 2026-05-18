@@ -1,4 +1,8 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000'
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL
+const API_BASE_URL =
+  import.meta.env.PROD && (!configuredApiBaseUrl || configuredApiBaseUrl.includes('localhost'))
+    ? ''
+    : configuredApiBaseUrl ?? 'http://localhost:4000'
 
 let isRefreshing = false
 let refreshSubscribers = []
@@ -13,6 +17,7 @@ const addRefreshSubscriber = (callback) => {
 }
 
 export const buildRequestUrl = (path) => `${API_BASE_URL}${path}`
+export { API_BASE_URL }
 
 const mapFetchFailureMessage = (error, requestUrl) => {
   const rawMessage = String(error?.message ?? '').toLowerCase()
