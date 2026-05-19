@@ -33,6 +33,17 @@ const mapFetchFailureMessage = (error, requestUrl) => {
   return `Request to ${requestUrl} failed before receiving a response.`
 }
 
+const buildRequestFailureMessage = (payload, response) => {
+  const backendMessage = payload?.error?.message ?? payload?.message
+
+  if (backendMessage) return backendMessage
+
+  const backendCode = payload?.error?.code ?? payload?.code
+  if (backendCode) return `Request failed (${backendCode})`
+
+  return `Request failed with status ${response.status}`
+}
+
 export const apiRequest = async (path, options = {}) => {
   const requestUrl = buildRequestUrl(path)
   const executeRequest = async () => {
@@ -67,17 +78,25 @@ export const apiRequest = async (path, options = {}) => {
 
     if (!response.ok) {
       const backendCode = payload?.error?.code ?? payload?.code
-      const backendMessage = payload?.error?.message ?? payload?.message
+      const backendMessage = buildRequestFailureMessage(payload, response)
       const isEmptyQueryError =
         backendCode === 'EMPTY_SQL_QUERY' ||
         String(backendMessage ?? '').toLowerCase().includes('emptyquery')
       const message = isEmptyQueryError
         ? 'Login service is temporarily unavailable. Please try again in a moment.'
-        : backendMessage ?? 'Request failed'
+        : backendMessage
       const error = new Error(message)
       error.status = response.status
       error.code = backendCode ?? 'REQUEST_FAILED'
       error.payload = payload
+
+      console.error('[apiRequest] backend request failed', {
+        url: requestUrl,
+        method: options.method ?? 'GET',
+        status: response.status,
+        code: error.code,
+        payload,
+      })
 
       if (isEmptyQueryError) {
         console.error('[apiRequest] backend empty query error', {
