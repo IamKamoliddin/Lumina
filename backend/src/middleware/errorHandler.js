@@ -10,6 +10,8 @@ export const notFoundHandler = (_req, res) => {
 export const errorHandler = (error, _req, res, _next) => {
   const isDbConnectionError =
     error?.code === 'ECONNREFUSED' ||
+    error?.code === 'ENOTFOUND' ||
+    error?.code === 'EAI_AGAIN' ||
     error?.code === 'ETIMEDOUT' ||
     error?.code === 'PROTOCOL_CONNECTION_LOST' ||
     error?.code === 'ER_CON_COUNT_ERROR' ||

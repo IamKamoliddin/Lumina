@@ -3,12 +3,30 @@ import { env } from '../config/env.js'
 import { logger } from '../config/logger.js'
 import { AppError } from '../utils/appError.js'
 
+const buildConnectionConfig = () => {
+  if (!env.DB_HOST.startsWith('mysql://') && !env.DB_HOST.startsWith('mysql2://')) {
+    return {
+      host: env.DB_HOST,
+      port: env.DB_PORT,
+      user: env.DB_USER,
+      password: env.DB_PASSWORD,
+      database: env.DB_NAME,
+    }
+  }
+
+  const parsed = new URL(env.DB_HOST)
+
+  return {
+    host: parsed.hostname,
+    port: Number(parsed.port || env.DB_PORT),
+    user: decodeURIComponent(parsed.username || env.DB_USER),
+    password: decodeURIComponent(parsed.password || env.DB_PASSWORD),
+    database: decodeURIComponent(parsed.pathname.replace(/^\//, '') || env.DB_NAME),
+  }
+}
+
 const basePool = mysql.createPool({
-  host: env.DB_HOST,
-  port: env.DB_PORT,
-  user: env.DB_USER,
-  password: env.DB_PASSWORD,
-  database: env.DB_NAME,
+  ...buildConnectionConfig(),
   waitForConnections: true,
   connectionLimit: 10,
   maxIdle: 10,
