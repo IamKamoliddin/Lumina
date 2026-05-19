@@ -688,7 +688,7 @@ export const useLuminaStore = create((set, get) => ({
       })
       await get().fetchSubjects()
     } catch (error) {
-      if (error.status !== 401) {
+      if (error.status !== 401 && error.code !== 'INVALID_API_RESPONSE') {
         set({ authError: error.message, authErrorContext: 'session' })
       }
 
