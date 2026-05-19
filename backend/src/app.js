@@ -35,16 +35,32 @@ const isLocalDevOrigin = (origin) => {
   }
 }
 
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin || env.CLIENT_ORIGINS.includes(origin) || isLocalDevOrigin(origin)) {
-        return callback(null, true)
-      }
+const isSameHostOrigin = (origin, req) => {
+  try {
+    const parsed = new URL(origin)
+    return parsed.host === req.get('host')
+  } catch {
+    return false
+  }
+}
 
-      return callback(new Error('CORS origin not allowed'))
-    },
-    credentials: true,
+app.use(
+  cors((req, callback) => {
+    callback(null, {
+      origin(origin, originCallback) {
+        if (
+          !origin ||
+          env.CLIENT_ORIGINS.includes(origin) ||
+          isSameHostOrigin(origin, req) ||
+          isLocalDevOrigin(origin)
+        ) {
+          return originCallback(null, true)
+        }
+
+        return originCallback(new Error('CORS origin not allowed'))
+      },
+      credentials: true,
+    })
   }),
 )
 app.use(
